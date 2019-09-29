@@ -1005,7 +1005,7 @@ int CRKAndroidDevice::DownloadImage()
 		{
 			if (m_pCallback)
 			{
-				sprintf(szPrompt,"%s writing...",rkImageHead.item[i].name);
+				sprintf(szPrompt,"%s writing... \n",rkImageHead.item[i].name);
 				m_pCallback(szPrompt);
 			}
 			if (GptFlag)
@@ -1016,6 +1016,7 @@ int CRKAndroidDevice::DownloadImage()
 					if (m_pLog)
 					{
 						m_pLog->Record(_T("ERROR:DownloadImage-->RKA_Gpt_Download failed"));
+						m_pCallback("ERROR:DownloadImage-->RKA_Gpt_Download failed \n");
 					}
 					return -4;
 				}
@@ -1028,6 +1029,7 @@ int CRKAndroidDevice::DownloadImage()
 					if (m_pLog)
 					{
 						m_pLog->Record(_T(" ERROR:DownloadImage-->RKA_Param_Download failed"));
+						m_pCallback("ERROR:DownloadImage-->RKA_Param_Download failed \n");
 					}
 	//				if(m_pCallback)
 	//				{
@@ -1053,7 +1055,7 @@ int CRKAndroidDevice::DownloadImage()
 			{
 				if (m_pCallback)
 				{
-					sprintf(szPrompt,"%s writing...",rkImageHead.item[i].name);
+					sprintf(szPrompt,"%s writing... \n",rkImageHead.item[i].name);
 					m_pCallback(szPrompt);
 				}
 				if (uiSparseFlag & (1<<i))
@@ -1068,6 +1070,7 @@ int CRKAndroidDevice::DownloadImage()
 					{
 						m_pLog->Record(_T("ERROR:DownloadImage-->RKA_File_Download failed(%s)"),rkImageHead.item[i].name);
 					}
+					m_pCallback("ERROR:DownloadImage-->RKA_File_Download failed(%s) \n",rkImageHead.item[i].name);
 					return -5;
 				}
 			}
@@ -1091,7 +1094,7 @@ int CRKAndroidDevice::DownloadImage()
 		{
 			if (m_pCallback)
 			{
-				sprintf(szPrompt,"%s checking...",rkImageHead.item[i].name);
+				sprintf(szPrompt,"%s checking... \n",rkImageHead.item[i].name);
 				m_pCallback(szPrompt);
 			}
 			if (GptFlag)
@@ -1103,6 +1106,7 @@ int CRKAndroidDevice::DownloadImage()
 					{
 						m_pLog->Record(_T("ERROR:DownloadImage-->RKA_Gpt_Check failed"));
 					}
+					m_pCallback("ERROR:DownloadImage-->RKA_Gpt_Check failed \n");
 					return -6;
 				}
 			}
@@ -1115,6 +1119,7 @@ int CRKAndroidDevice::DownloadImage()
 					{
 						m_pLog->Record(_T("ERROR:DownloadImage-->RKA_Param_Check failed"));
 					}
+					m_pCallback("ERROR:DownloadImage-->RKA_Param_Check failed \n");
 					return -6;
 				}
 			}
@@ -1133,7 +1138,7 @@ int CRKAndroidDevice::DownloadImage()
 			{
 				if (m_pCallback)
 				{
-					sprintf(szPrompt,"%s checking...",rkImageHead.item[i].name);
+					sprintf(szPrompt,"%s checking... \n",rkImageHead.item[i].name);
 					m_pCallback(szPrompt);
 				}
 				if (uiSparseFlag & (1<<i))
@@ -1148,6 +1153,7 @@ int CRKAndroidDevice::DownloadImage()
 					{
 						m_pLog->Record(_T("ERROR:DownloadImage-->RKA_File_Check failed(%s)"),rkImageHead.item[i].name);
 					}
+					m_pCallback("ERROR:DownloadImage-->RKA_File_Check failed(%s) \n",rkImageHead.item[i].name);
 					return -7;
 				}
 			}
@@ -1712,6 +1718,8 @@ bool CRKAndroidDevice::RKA_File_Download(STRUCT_RKIMAGE_ITEM &entry,long long &c
 	long long ulEntryStartOffset;
 	DWORD dwFWOffset;
 	(void)totalByte;
+
+	m_pCallback("RKA_File_Download entry.name=%s \n", entry.name);
 	dwFWOffset = m_pImage->FWOffset;
 	if (entry.file[50]=='H')
 	{
@@ -1876,6 +1884,7 @@ bool CRKAndroidDevice::RKA_File_Download(STRUCT_RKIMAGE_ITEM &entry,long long &c
 	}
 	delete []pBuffer;
 	pBuffer = NULL;
+	m_pCallback("RKA_File_Download entry.name=%s DONE! \n", entry.name);
 	return true;
 }
 
@@ -1890,6 +1899,7 @@ bool CRKAndroidDevice::RKA_File_Check(STRUCT_RKIMAGE_ITEM &entry,long long &curr
 	long long ulEntryStartOffset;
 	DWORD dwFWOffset;
 	(void)totalByte;
+	m_pCallback("RKA_File_Check entry.name=%s \n", entry.name);
 	dwFWOffset = m_pImage->FWOffset;
 	if (entry.file[50]=='H')
 	{
@@ -2055,6 +2065,7 @@ bool CRKAndroidDevice::RKA_File_Check(STRUCT_RKIMAGE_ITEM &entry,long long &curr
 
 	}
 
+	m_pCallback("RKA_File_Check entry.name=%s DONE! \n", entry.name);
 	delete []pBufferFromFile;
 	delete []pBufferFromFlash;
 	return true;
@@ -2857,6 +2868,8 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 	chunk_header chunk;
 	//dwLayerID = GetLayerID();
 	(void)totalByte;
+
+	m_pCallback("RKA_SparseFile_Download entry.name=%s \n", entry.name);
 	dwFWOffset = m_pImage->FWOffset;
 	if (entry.file[50]=='H')
 	{
@@ -2886,6 +2899,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 		if (m_pLog)
 		{
 			m_pLog->Record(_T("ERROR:RKA_SparseFile_Download-->get sparse header failed,partition=%s"),entry.name);
+			m_pCallback("ERROR:RKA_SparseFile_Download-->get sparse header failed,partition=%s \n",entry.name);
 		}
 		return false;
 	}
@@ -2893,8 +2907,10 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 	if (m_pLog)
 	{
 		m_pLog->Record(_T("INFO:Start to download %s,offset=0x%x,size=%llu"),entry.name,entry.flash_offset,uifileBufferSize);
+		m_pCallback("INFO:Start to download %s,offset=0x%x,size=%llu \n",entry.name,entry.flash_offset,uifileBufferSize);
 	}
 	//erase system partition
+#if 0
 	if ( !strcmp(entry.name, "system") && !EraseSparseRegion("/system",NULL))
 	{
 		if (m_pLog)
@@ -2903,6 +2919,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 		}
 		return false;
 	}
+#endif
 
 	BYTE byRWMethod=RWMETHOD_IMAGE;
 
@@ -2918,6 +2935,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 		{
 			m_pLog->Record(_T(" ERROR:RKA_SparseFile_Download-->New memory failed"));
 		}
+		m_pCallback("ERROR:RKA_SparseFile_Download-->New memory failed \n");
 		return false;
 	}
 
@@ -2935,6 +2953,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 			{
 				m_pLog->Record(_T(" ERROR:RKA_SparseFile_Download-->get sparse chunk failed"));
 			}
+			m_pCallback("ERROR:RKA_SparseFile_Download-->get sparse chunk failed \n");
 			delete []pBuffer;
 			pBuffer = NULL;
 			return false;
@@ -2964,6 +2983,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 					{
 						m_pLog->Record(_T("ERROR:RKA_SparseFile_Download-->get chunk data failed,chunk=%d"),uiCurChunk);
 					}
+					m_pCallback("ERROR:RKA_SparseFile_Download-->get chunk data failed,chunk=%d \n",uiCurChunk);
 					delete []pBuffer;
 					pBuffer = NULL;
 					return false;
@@ -2976,7 +2996,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 					{
 						m_pLog->Record(_T("ERROR:RKA_SparseFile_Download-->RKU_WriteLBA failed,RetCode(%d),chunk=%d"),iRet,uiCurChunk);
 					}
-
+					m_pCallback("ERROR:RKA_SparseFile_Download-->RKU_WriteLBA failed,RetCode(%d),chunk=%d \n",iRet,uiCurChunk);
 					delete []pBuffer;
 					pBuffer = NULL;
 					return false;
@@ -2995,6 +3015,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 				{
 					m_pLog->Record(_T("ERROR:RKA_SparseFile_Download-->get fill byte failed,chunk=%d"),uiCurChunk);
 				}
+				m_pCallback("ERROR:RKA_SparseFile_Download-->get fill byte failed,chunk=%d \n",uiCurChunk);
 				delete []pBuffer;
 				pBuffer = NULL;
 				return false;
@@ -3025,7 +3046,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 					{
 						m_pLog->Record(_T(" ERROR:RKA_SparseFile_Download-->RKU_WriteLBA failed,RetCode(%d),chunk=%d"),iRet,uiCurChunk);
 					}
-
+					m_pCallback("ERROR:RKA_SparseFile_Download-->RKU_WriteLBA failed,RetCode(%d),chunk=%d \n",iRet,uiCurChunk);
 					delete []pBuffer;
 					pBuffer = NULL;
 					return false;
@@ -3052,6 +3073,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 	delete []pBuffer;
 	pBuffer = NULL;
 
+	m_pCallback("RKA_SparseFile_Download entry.name=%s DONE! \n", entry.name);
 	return true;
 }
 bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte)
@@ -3068,6 +3090,11 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 	sparse_header header;
 	chunk_header chunk;
 	(void)totalByte;
+	m_pCallback("RKA_SparseFile_Check entry.name=%s \n", entry.name);
+	if (strcmp(entry.name, "super") == 0){
+		m_pCallback("RKA_SparseFile_Check entry.name=%s Done! \n", entry.name);
+		return true;
+	}
 	dwFWOffset = m_pImage->FWOffset;
 	if (entry.file[50]=='H')
 	{
@@ -3097,6 +3124,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 		{
 			m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->get sparse header failed,partition=%s"),entry.name);
 		}
+		m_pCallback("ERROR:RKA_SparseFile_Check-->get sparse header failed,partition=%s \n",entry.name);
 		return false;
 	}
 	uifileBufferSize = header.blk_sz * header.total_blks;
@@ -3104,6 +3132,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 	{
 		m_pLog->Record(_T("INFO:Start to check %s,offset=0x%x,size=%I64u"),entry.name,entry.flash_offset,uifileBufferSize);
 	}
+	m_pCallback("INFO:Start to check %s,offset=0x%x,size=%I64u \n",entry.name,entry.flash_offset,uifileBufferSize);
 
 	BYTE byRWMethod=RWMETHOD_IMAGE;
 	if (entry.flash_offset>m_dwBackupOffset)
@@ -3119,6 +3148,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 		{
 			m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->New memory failed"));
 		}
+		m_pCallback("ERROR:RKA_SparseFile_Check-->New memory failed \n");
 		return false;
 	}
 	PBYTE pBufferFromFlash=NULL;
@@ -3129,6 +3159,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 		{
 			m_pLog->Record(_T("ERROR:RKA_SparseFile_Check-->New memory failed"));
 		}
+		m_pCallback("ERROR:RKA_SparseFile_Check-->New memory failed \n");
 		delete []pBufferFromFile;
 		return false;
 	}
@@ -3148,6 +3179,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 			{
 				m_pLog->Record(_T("ERROR:RKA_SparseFile_Check-->get sparse chunk failed"));
 			}
+			m_pCallback("ERROR:RKA_SparseFile_Check-->get sparse chunk failed \n");
 			delete []pBufferFromFile;
 			delete []pBufferFromFlash;
 			return false;
@@ -3178,6 +3210,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 					{
 						m_pLog->Record(_T("ERROR:RKA_SparseFile_Check-->get chunk data failed,chunk=%d"),uiCurChunk);
 					}
+					m_pCallback("ERROR:RKA_SparseFile_Check-->get chunk data failed,chunk=%d \n",uiCurChunk);
 					delete []pBufferFromFile;
 					delete []pBufferFromFlash;
 					return false;
@@ -3190,6 +3223,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 					{
 						m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->RKU_ReadLBA failed,RetCode(%d),chunk=%d"),iRet,uiCurChunk);
 					}
+					m_pCallback("ERROR:RKA_SparseFile_Check-->RKU_ReadLBA failed,RetCode(%d),chunk=%d \n",iRet,uiCurChunk);
 					delete []pBufferFromFile;
 					delete []pBufferFromFlash;
 					return false;
@@ -3200,6 +3234,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 					{
 						m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->Memcmp failed,chunk=%d"),uiCurChunk);
 					}
+					m_pCallback("ERROR:RKA_SparseFile_Check-->Memcmp failed,chunk=%d \n",uiCurChunk);
 					if (m_pLog)
 					{
 						tchar szDateTime[100];
@@ -3235,6 +3270,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 				{
 					m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->get fill byte failed,chunk=%d"),uiCurChunk);
 				}
+				m_pCallback("ERROR:RKA_SparseFile_Check-->get fill byte failed,chunk=%d \n",uiCurChunk);
 				delete []pBufferFromFile;
 				delete []pBufferFromFlash;
 				return false;
@@ -3265,6 +3301,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 					{
 						m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->RKU_ReadLBA failed,RetCode(%d),chunk=%d"),iRet,uiCurChunk);
 					}
+					m_pCallback("ERROR:RKA_SparseFile_Check-->RKU_ReadLBA failed,RetCode(%d),chunk=%d \n",iRet,uiCurChunk);
 					delete []pBufferFromFile;
 					delete []pBufferFromFlash;
 					return false;
@@ -3318,6 +3355,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 
 	delete []pBufferFromFile;
 	delete []pBufferFromFlash;
+	m_pCallback("RKA_SparseFile_Check entry.name=%s Done! \n", entry.name);
 	return true;
 }
 

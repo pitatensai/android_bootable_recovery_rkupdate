@@ -387,6 +387,6 @@ typedef vector<STRUCT_CONFIG_ITEM> CONFIG_ITEM_VECTOR;
 //bool WideStringToString(wchar_t *pszSrc,char *&pszDest);
 //bool StringToWideString(char *pszSrc,wchar_t *&pszDest);
 //bool transform(string &src,bool lowercase);
-typedef void (*UpgradeCallbackFunc)(char *pszPrompt);
+typedef void (*UpgradeCallbackFunc)(const char* fmt, ...);
 typedef void (*UpgradeProgressCallbackFunc)(float portion, float seconds);
 #endif
