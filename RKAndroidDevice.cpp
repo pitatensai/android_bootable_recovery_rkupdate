@@ -2837,6 +2837,73 @@ int CRKAndroidDevice:: getEmmc() {
     return result;
 }
 
+bool CRKAndroidDevice::ErasePartition(STRUCT_RKIMAGE_ITEM &entry)
+{
+	UINT uiLBATransferSize=(LBA_TRANSFER_SIZE)*m_uiLBATimes;
+	UINT uiLBASector = uiLBATransferSize/SECTOR_SIZE;
+	int iRet;
+	UINT uiBufferSize=uiLBATransferSize;
+	long long uifileBufferSize;
+	BYTE byRWMethod=RWMETHOD_IMAGE;
+
+	uifileBufferSize = entry.part_size * SECTOR_SIZE;
+	if (m_pLog)
+	{
+		m_pLog->Record(_T(" INFO:ErasePartition %s,offset=0x%x,size=%llu, part_size=0x%x"),entry.name,entry.flash_offset,uifileBufferSize, entry.part_size);
+	}
+	m_pCallback("INFO:ErasePartition %s,offset=0x%x,size=%llu, part_size=0x%x \n",entry.name,entry.flash_offset,uifileBufferSize, entry.part_size);
+
+	PBYTE pBuffer=NULL;
+	pBuffer = new BYTE[uiBufferSize];
+	if (!pBuffer)
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T("ERROR:ErasePartition-->New memory failed"));
+		}
+		m_pCallback("ERROR:ErasePartition-->New memory failed \n");
+		return false;
+	}
+
+	UINT uiBegin,uiLen,uiWriteByte;
+	long long uiEntryOffset;
+	uiBegin = entry.flash_offset;
+	uiLen = 0;uiWriteByte = 0;uiEntryOffset=0;
+	while ( uifileBufferSize>0 )
+	{
+		memset(pBuffer,0,uiBufferSize);
+		if ( uifileBufferSize<uiBufferSize )
+		{
+			uiWriteByte = uifileBufferSize;
+			uiLen = ( (uiWriteByte%SECTOR_SIZE==0) ? (uiWriteByte/SECTOR_SIZE) : (uiWriteByte/SECTOR_SIZE+1) );
+		}
+		else
+		{
+			uiWriteByte = uiBufferSize;
+			uiLen = uiLBASector;
+		}
+
+		iRet = m_pComm->RKU_WriteLBA(uiBegin,uiLen,pBuffer,byRWMethod);
+		if( iRet!=ERR_SUCCESS )
+		{
+			if (m_pLog)
+			{
+				m_pLog->Record(_T("ERROR:ErasePartition-->RKU_WriteLBA failed,Written(%d),RetCode(%d)"),uiEntryOffset,iRet);
+			}
+			m_pCallback("ERROR:ErasePartition-->RKU_WriteLBA failed,Written(%d),RetCode(%d) \n",uiEntryOffset,iRet);
+
+			delete []pBuffer;
+			pBuffer = NULL;
+			return false;
+		}
+		uifileBufferSize -= uiWriteByte;
+		uiEntryOffset += uiWriteByte;
+		uiBegin += uiLen;
+	}
+	delete []pBuffer;
+	pBuffer = NULL;
+	return true;
+}
 
 bool CRKAndroidDevice::EraseSparseRegion(const char* volume,const char* directory)
 {
@@ -2919,6 +2986,16 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 		}
 		return false;
 	}
+#else
+	if(!ErasePartition(entry))
+	{
+		if (m_pLog)
+		{
+			m_pLog->Record(_T(" ERROR:RKA_SparseFile_Download-->ErasePartition failed"));
+		}
+		m_pCallback("ERROR:RKA_SparseFile_Download-->ErasePartition failed \n");
+		return false;
+	}
 #endif
 
 	BYTE byRWMethod=RWMETHOD_IMAGE;
@@ -2944,8 +3021,10 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 	uiCurChunk = 0;
 	uiBegin = entry.flash_offset;
 	uiLen = 0;uiWriteByte = 0;uiEntryOffset=sizeof(header);
+	m_pCallback("INFO:RKA_SparseFile_Download-->total_chunks=%u \n", header.total_chunks);
 	while ( uiCurChunk<header.total_chunks)
 	{
+		memset(&chunk, 0x0, sizeof(chunk));
 		bRet = m_pImage->GetData(ulEntryStartOffset+uiEntryOffset,sizeof(chunk),(PBYTE)&chunk);
 		if (!bRet)
 		{
@@ -3038,7 +3117,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 				{
 					*(UINT *)(pBuffer + i*4) = uiFillByte;
 				}
-				uiEntryOffset += uiWriteByte;
+
 				iRet = m_pComm->RKU_WriteLBA(uiBegin,uiLen,pBuffer,byRWMethod);
 				if( iRet!=ERR_SUCCESS )
 				{
@@ -3091,10 +3170,7 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 	chunk_header chunk;
 	(void)totalByte;
 	m_pCallback("RKA_SparseFile_Check entry.name=%s \n", entry.name);
-	if (strcmp(entry.name, "super") == 0){
-		m_pCallback("RKA_SparseFile_Check entry.name=%s Done! \n", entry.name);
-		return true;
-	}
+
 	dwFWOffset = m_pImage->FWOffset;
 	if (entry.file[50]=='H')
 	{
@@ -3169,9 +3245,9 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 	uiBegin = entry.flash_offset;
 	uiCurChunk = 0;
 	uiLen = 0;uiWriteByte = 0;uiEntryOffset=sizeof(header);
-
 	while ( uiCurChunk<header.total_chunks)
 	{
+		memset(&chunk, 0x0, sizeof(chunk));
 		bRet = m_pImage->GetData(ulEntryStartOffset+uiEntryOffset,sizeof(chunk),(PBYTE)&chunk);
 		if (!bRet)
 		{
@@ -3232,9 +3308,9 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 				{
 					if (m_pLog)
 					{
-						m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->Memcmp failed,chunk=%d"),uiCurChunk);
+						m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->Memcmp failed,chunk=%d uiBegin=0x%x \n"),uiCurChunk, uiBegin);
 					}
-					m_pCallback("ERROR:RKA_SparseFile_Check-->Memcmp failed,chunk=%d \n",uiCurChunk);
+					m_pCallback("ERROR:RKA_SparseFile_Check-->Memcmp failed,chunk=%d uiBegin=0x%x\n",uiCurChunk, uiBegin);
 					if (m_pLog)
 					{
 						tchar szDateTime[100];
@@ -3310,8 +3386,9 @@ bool CRKAndroidDevice::RKA_SparseFile_Check(STRUCT_RKIMAGE_ITEM &entry,long long
 				{
 					if (m_pLog)
 					{
-						m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->Memcmp failed,chunk=%d"),uiCurChunk);
+						m_pLog->Record(_T(" ERROR:RKA_SparseFile_Check-->Memcmp failed,chunk=%d uiBegin=%0x%x"),uiCurChunk, uiBegin);
 					}
+					m_pCallback("ERROR:RKA_SparseFile_Check-->Memcmp failed,chunk=%d uiBegin=%0x%x",uiCurChunk, uiBegin);
 					if (m_pLog)
 					{
 						tchar szDateTime[100];
