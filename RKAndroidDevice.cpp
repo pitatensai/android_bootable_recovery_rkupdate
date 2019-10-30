@@ -2290,9 +2290,13 @@ bool CRKAndroidDevice::RKA_Gpt_Download(STRUCT_RKIMAGE_ITEM &entry,long long &cu
 	bRet = get_uuid_from_parameter((char *)(m_paramBuffer+8),vecUuids);
 	backup_gpt = m_gptBuffer+34*SECTOR_SIZE;
 	create_gpt_buffer(m_gptBuffer,vecItems,vecUuids,m_flashInfo.uiFlashSize*2048);
+	if (m_pLog)
+	{
+		m_pLog->Record(_T("INFO:RKA_Gpt_Download-->disk_sector=%u \n)"),m_flashInfo.uiFlashSize*2048);
+	}
 	memcpy(backup_gpt, m_gptBuffer + 2* SECTOR_SIZE, 32 * SECTOR_SIZE);
 	memcpy(backup_gpt + 32 * SECTOR_SIZE, m_gptBuffer + SECTOR_SIZE, SECTOR_SIZE);
-	prepare_gpt_backup(m_paramBuffer, backup_gpt);
+	prepare_gpt_backup(m_paramBuffer, backup_gpt, m_flashInfo.uiFlashSize*2048);
 
 	iRet = m_pComm->RKU_WriteLBA(0,34,m_gptBuffer);
 	if (iRet!=ERR_SUCCESS)
@@ -3534,18 +3538,16 @@ unsigned int crc32_le(unsigned int crc, unsigned char *p, unsigned int len)
 	return crc;
 
 }
-void prepare_gpt_backup(u8 *master, u8 *backup)
+void prepare_gpt_backup(u8 *master, u8 *backup, u64 diskSectors)
 {
-	gpt_header *gptMasterHead = (gpt_header *)(master + SECTOR_SIZE);
 	gpt_header *gptBackupHead = (gpt_header *)(backup + 32 * SECTOR_SIZE);
 	u32 calc_crc32;
-	u64 val;
+	(void)master;
 
 	/* recalculate the values for the Backup GPT Header */
-	val = le64_to_cpu(gptMasterHead->my_lba);
-	gptBackupHead->my_lba = gptMasterHead->alternate_lba;
-	gptBackupHead->alternate_lba = cpu_to_le64(val);
-	gptBackupHead->partition_entry_lba = cpu_to_le64(le64_to_cpu(gptMasterHead->last_usable_lba) + 1);
+	gptBackupHead->my_lba = cpu_to_le64(diskSectors - 1);
+	gptBackupHead->alternate_lba = cpu_to_le64(1);
+	gptBackupHead->partition_entry_lba = cpu_to_le64(diskSectors - 34 + 1);
 	gptBackupHead->header_crc32 = 0;
 
 	calc_crc32 = crc32_le(0, (unsigned char *)gptBackupHead, le32_to_cpu(gptBackupHead->header_size));

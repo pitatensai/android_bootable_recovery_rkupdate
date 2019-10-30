@@ -1439,7 +1439,7 @@ bool do_rk_gpt_update(char *szFw,void *pCallback,void *pProgressCallback,char *s
 	create_gpt_buffer(m_gptBuffer,vecItems,vecUuids,uiFlashSize/512);
 	memcpy(backup_gpt, m_gptBuffer + 2* SECTOR_SIZE, 32 * SECTOR_SIZE);
 	memcpy(backup_gpt + 32 * SECTOR_SIZE, m_gptBuffer + SECTOR_SIZE, SECTOR_SIZE);
-	prepare_gpt_backup(m_gptBuffer, backup_gpt);
+	prepare_gpt_backup(m_gptBuffer, backup_gpt, uiFlashSize/512);
 	iRet = pComm->RKU_WriteLBA(0,34,m_gptBuffer);
 	if (iRet!=ERR_SUCCESS)
 	{

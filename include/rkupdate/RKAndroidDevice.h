@@ -273,7 +273,7 @@ private:
 	bool GetParameterGptFlag(STRUCT_RKIMAGE_ITEM &paramItem);
 };
 void create_gpt_buffer(u8 *gpt, PARAM_ITEM_VECTOR &vecParts, CONFIG_ITEM_VECTOR &vecUuid, u64 diskSectors);
-void prepare_gpt_backup(u8 *master, u8 *backup);
+void prepare_gpt_backup(u8 *master, u8 *backup, u64 diskSectors);
 void gen_rand_uuid(unsigned char *uuid_bin);
 unsigned int crc32_le(unsigned int crc, unsigned char *p, unsigned int len);
 bool parse_parameter(char *pParameter,PARAM_ITEM_VECTOR &vecItem);
