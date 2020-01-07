@@ -832,19 +832,22 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 	if (!pLog)
 		goto EXIT_UPGRADE;
 	pLog->Record("Start to upgrade firmware...");
-	g_callback("Start to upgrade firmware... \n");
+	if (g_callback)
+		g_callback("Start to upgrade firmware... \n");
 	pImage = new CRKImage(strFw,bRet);
 	if (!bRet)
 	{
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->new CRKImage failed!");
-		g_callback("ERROR:do_rk_firmware_upgrade-->new CRKImage failed! \n");
+		if (g_callback)
+			g_callback("ERROR:do_rk_firmware_upgrade-->new CRKImage failed! \n");
 		goto EXIT_UPGRADE;
 	}
 	pComm = new CRKUsbComm(pLog);
 	if (!pComm)
 	{
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->new CRKComm failed!");
-		g_callback("ERROR:do_rk_firmware_upgrade-->new CRKComm failed! \n");
+		if (g_callback)
+			g_callback("ERROR:do_rk_firmware_upgrade-->new CRKComm failed! \n");
 		goto EXIT_UPGRADE;
 	}
 	if (IsDeviceLock(pComm,bLock))
@@ -856,7 +859,8 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 			if (!bRet)
 			{
 				pLog->Record("ERROR:do_rk_firmware_upgrade-->new CRKImage with check failed,%s!",szFw);
-				g_callback("ERROR:do_rk_firmware_upgrade-->new CRKImage with check failed,%s! \n",szFw);
+				if (g_callback)
+					g_callback("ERROR:do_rk_firmware_upgrade-->new CRKImage with check failed,%s! \n",szFw);
 				goto EXIT_UPGRADE;
 			}
 
@@ -891,7 +895,8 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 			if (!bRet)
 			{
 				pLog->Record("ERROR:do_rk_firmware_upgrade-->new CRKImage failed,%s!",szFw);
-				g_callback("ERROR:do_rk_firmware_upgrade-->new CRKImage failed,%s! \n",szFw);
+				if (g_callback)
+					g_callback("ERROR:do_rk_firmware_upgrade-->new CRKImage failed,%s! \n",szFw);
 				goto EXIT_UPGRADE;
 			}
 		}
@@ -899,14 +904,16 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 	else
 	{
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->IsDeviceLock failed!");
-		g_callback("ERROR:do_rk_firmware_upgrade-->IsDeviceLock failed! \n");
+		if (g_callback)
+			g_callback("ERROR:do_rk_firmware_upgrade-->IsDeviceLock failed! \n");
 		goto EXIT_UPGRADE;
 	}
 	pDevice = new CRKAndroidDevice(device);
 	if (!pDevice)
 	{
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->new CRKAndroidDevice failed!");
-		g_callback("ERROR:do_rk_firmware_upgrade-->new CRKAndroidDevice failed! \n");
+		if (g_callback)
+			g_callback("ERROR:do_rk_firmware_upgrade-->new CRKAndroidDevice failed! \n");
 		goto EXIT_UPGRADE;
 	}
 	pDevice->SetObject(pImage,pComm,pLog);
@@ -915,52 +922,62 @@ bool do_rk_firmware_upgrade(char *szFw,void *pCallback,void *pProgressCallback,c
 		pDevice->Uid = uid;
 		pLog->PrintBuffer(strUid,uid,RKDEVICE_UID_LEN);
 		pLog->Record("uid:%s",strUid.c_str());
-		g_callback("uid:%s \n",strUid.c_str());
+		if (g_callback)
+			g_callback("uid:%s \n",strUid.c_str());
 	}
 	pDevice->m_pCallback = (UpgradeCallbackFunc)pCallback;
 	pDevice->m_pProcessCallback = (UpgradeProgressCallbackFunc)pProgressCallback;
 	pLog->Record("Get FlashInfo...");
-	g_callback("Get FlashInfo... \n");
+	if (g_callback)
+		g_callback("Get FlashInfo... \n");
 	bRet = pDevice->GetFlashInfo();
 	if (!bRet)
 	{
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->GetFlashInfo failed!");
-		g_callback("ERROR:do_rk_firmware_upgrade-->GetFlashInfo failed! \n");
+		if (g_callback)
+			g_callback("ERROR:do_rk_firmware_upgrade-->GetFlashInfo failed! \n");
 		goto EXIT_UPGRADE;
 	}
 	pLog->Record("IDBlock Preparing...");
-	g_callback("IDBlock Preparing... \n");
+	if (g_callback)
+		g_callback("IDBlock Preparing... \n");
 	iRet = pDevice->PrepareIDB();
 	if (iRet!=ERR_SUCCESS)
 	{
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->PrepareIDB failed!");
-		g_callback("ERROR:do_rk_firmware_upgrade-->PrepareIDB failed! \n");
+		if (g_callback)
+			g_callback("ERROR:do_rk_firmware_upgrade-->PrepareIDB failed! \n");
 		goto EXIT_UPGRADE;
 	}
 	pLog->Record("IDBlock Writing...");
-	g_callback("IDBlock Writing... \n");
+	if (g_callback)
+		g_callback("IDBlock Writing... \n");
 	iRet = pDevice->DownloadIDBlock();
 	if (iRet!=ERR_SUCCESS)
 	{
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->DownloadIDBlock failed!");
-		g_callback("ERROR:do_rk_firmware_upgrade-->DownloadIDBlock failed! \n");
+		if (g_callback)
+			g_callback("ERROR:do_rk_firmware_upgrade-->DownloadIDBlock failed! \n");
 		goto EXIT_UPGRADE;
 	}
 
 	if (strFw.find(_T(".bin"))!=tstring::npos)
 	{
 		pLog->Record("INFO:do_rk_firmware_upgrade-->Download loader only success!");
-		g_callback("INFO:do_rk_firmware_upgrade-->Download loader only success! \n");
+		if (g_callback)
+			g_callback("INFO:do_rk_firmware_upgrade-->Download loader only success! \n");
 		bSuccess = true;
 		return bSuccess;
 	}
 
-	g_callback("INFO:do_rk_firmware_upgrade begin DownloadImage... ! \n");
+	if (g_callback)
+		g_callback("INFO:do_rk_firmware_upgrade begin DownloadImage... ! \n");
 	iRet = pDevice->DownloadImage();
 	if (iRet!=ERR_SUCCESS)
 	{
 		pLog->Record("ERROR:do_rk_firmware_upgrade-->DownloadImage failed!");
-		g_callback("ERROR:do_rk_firmware_upgrade-->DownloadImage failed! \n");
+		if (g_callback)
+			g_callback("ERROR:do_rk_firmware_upgrade-->DownloadImage failed! \n");
 		goto EXIT_UPGRADE;
 	}
 
@@ -969,12 +986,14 @@ EXIT_UPGRADE:
 	if (bSuccess)
 	{
 		pLog->Record("Finish to upgrade firmware.");
-		g_callback("Finish to upgrade firmware. \n");
+		if (g_callback)
+			g_callback("Finish to upgrade firmware. \n");
 	}
 	else
 	{
 		pLog->Record("Fail to upgrade firmware!");
-		g_callback("Fail to upgrade firmware! \n");
+		if (g_callback)
+			g_callback("Fail to upgrade firmware! \n");
 	}
 	if (pLog)
 	{
