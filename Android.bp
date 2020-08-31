@@ -33,7 +33,6 @@ cc_defaults {
         "libbrotli",
         "libbz",
         "libbase",
-        "libcrypto",
         "libcrypto_utils",
         "libcutils",
         "libutils",

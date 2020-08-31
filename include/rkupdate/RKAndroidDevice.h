@@ -13,7 +13,7 @@
 #include <sys/wait.h>
 #include <fstream>
 #include "gpt.h"
-#include "otautil/roots.h"
+
 #pragma pack(1)
 typedef	struct
 {

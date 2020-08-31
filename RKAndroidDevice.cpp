@@ -2911,6 +2911,7 @@ bool CRKAndroidDevice::ErasePartition(STRUCT_RKIMAGE_ITEM &entry)
 
 bool CRKAndroidDevice::EraseSparseRegion(const char* volume,const char* directory)
 {
+#if 0
 	//bool bSuccess = true;
     //if volume is system.then set volume is "",because system as root
     if(strcmp("/system", volume) == 0)
@@ -2923,6 +2924,17 @@ bool CRKAndroidDevice::EraseSparseRegion(const char* volume,const char* director
         printf("EraseSparseRegion format_volume is failed!!!\n");
         return false;
     }
+#else
+	(void)volume;
+	(void)directory;
+	if (m_pLog)
+	{
+		m_pLog->Record(_T(" INFO:EraseSparseRegion is deprecated, shall not be here! \n"));
+	}
+	m_pCallback("INFO:EraseSparseRegion is deprecated, shall not be here! \n");
+
+	return false;
+#endif
 }
 bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long long &currentByte,long long totalByte)
 {
