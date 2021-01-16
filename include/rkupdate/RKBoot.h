@@ -72,6 +72,7 @@ public:
 	bool GetEntryProperty(ENUM_RKBOOTENTRY type,UCHAR ucIndex,DWORD &dwSize,DWORD &dwDelay,tchar *pName=NULL);
 	CHAR GetIndexByName(ENUM_RKBOOTENTRY type,tchar *pName);
 	bool GetEntryData(ENUM_RKBOOTENTRY type,UCHAR ucIndex,PBYTE lpData);
+	bool IsNewIDBFlag();
 	CRKBoot(PBYTE lpBootData,DWORD dwBootSize,bool &bCheck);
 	~CRKBoot();
 protected:
@@ -95,6 +96,7 @@ private:
 	PBYTE m_BootData;
 	DWORD m_BootSize;
 	USHORT m_BootHeadSize;
+	bool m_NewIDBFlag;
 	void WCHAR_To_char(WCHAR *src,char *dst,int len);
 };
 
