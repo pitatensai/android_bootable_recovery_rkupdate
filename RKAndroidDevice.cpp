@@ -3019,13 +3019,31 @@ int CRKAndroidDevice:: getEmmc() {
     return result;
 }
 
+bool CRKAndroidDevice::ErasePartition_discard(STRUCT_RKIMAGE_ITEM &entry)
+{
+	u64 uifileBufferSize;
+	int iRet;
+
+	uifileBufferSize = entry.part_size * SECTOR_SIZE;
+	m_pCallback("INFO:ErasePartition %s,offset=0x%x,size=%llu, part_size=0x%x \n",
+				entry.name, entry.flash_offset, uifileBufferSize, entry.part_size);
+
+	iRet = m_pComm->RKU_EraseBlock_discard(entry.flash_offset, entry.part_size);
+
+	if( iRet!=ERR_SUCCESS ){
+		printf("erase block fail\n");
+		return false;
+	}
+	return true;
+}
+
 bool CRKAndroidDevice::ErasePartition(STRUCT_RKIMAGE_ITEM &entry)
 {
 	UINT uiLBATransferSize=(LBA_TRANSFER_SIZE)*m_uiLBATimes;
 	UINT uiLBASector = uiLBATransferSize/SECTOR_SIZE;
 	int iRet;
 	UINT uiBufferSize=uiLBATransferSize;
-	long long uifileBufferSize;
+	u64 uifileBufferSize;
 	BYTE byRWMethod=RWMETHOD_IMAGE;
 
 	uifileBufferSize = entry.part_size * SECTOR_SIZE;
@@ -3181,14 +3199,22 @@ bool CRKAndroidDevice::RKA_SparseFile_Download(STRUCT_RKIMAGE_ITEM &entry,long l
 		return false;
 	}
 #else
-	if(!ErasePartition(entry))
-	{
-		if (m_pLog)
-		{
-			m_pLog->Record(_T(" ERROR:RKA_SparseFile_Download-->ErasePartition failed"));
+	if(m_pComm->m_bEmmc == 1) {
+		if(!ErasePartition_discard(entry)) {
+			if (m_pLog) {
+				m_pLog->Record(_T(" ERROR:RKA_SparseFile_Download-->ErasePartition_discard failed"));
+			}
+			m_pCallback("ERROR:RKA_SparseFile_Download-->ErasePartition_discard failed \n");
+			return false;
 		}
-		m_pCallback("ERROR:RKA_SparseFile_Download-->ErasePartition failed \n");
-		return false;
+	} else {
+		if(!ErasePartition(entry)) {
+			if (m_pLog) {
+				m_pLog->Record(_T(" ERROR:RKA_SparseFile_Download-->ErasePartition failed"));
+			}
+			m_pCallback("ERROR:RKA_SparseFile_Download-->ErasePartition failed \n");
+			return false;
+		}
 	}
 #endif
 

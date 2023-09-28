@@ -129,6 +129,9 @@ typedef struct
 #define DISABLE_NAND_LBA_READ_IO   _IO('V',2)
 #define ENABLE_NAND_LBA_READ_IO    _IO('V',3)
 
+#ifndef BLKDISCARD
+#define BLKDISCARD _IO(0x12,119)
+#endif
 
 #define CMD_TIMEOUT 0
 
@@ -167,6 +170,7 @@ class CRKComm
 {
 public:
 	virtual int RKU_EraseBlock(BYTE ucFlashCS,DWORD dwPos,DWORD dwCount,BYTE ucEraseType)=0;
+	virtual int RKU_EraseBlock_discard(unsigned int dwPos, unsigned int part_size)=0;
 	virtual int RKU_ReadChipInfo(BYTE* lpBuffer)=0;	
 	virtual int RKU_ReadFlashID(BYTE* lpBuffer)=0;
 	virtual int RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead=NULL)=0;
@@ -185,11 +189,11 @@ public:
 	virtual int RKU_ShowNandLBADevice()=0;
 	virtual long long RKU_GetFlashSize();
 	CRKComm(CRKLog *pLog);
-        long long m_FlashSize;
+    long long m_FlashSize;
+	bool m_bEmmc;
 	virtual ~CRKComm();
 protected:
 	CRKLog *m_log;
-	bool m_bEmmc;
 	int m_hDev;
 	int m_hLbaDev;
 private:
@@ -199,6 +203,7 @@ class CRKUsbComm: public CRKComm
 {
 public:
 	virtual	int RKU_EraseBlock(BYTE ucFlashCS,DWORD dwPos,DWORD dwCount,BYTE ucEraseType);
+	virtual int RKU_EraseBlock_discard(unsigned int dwPos, unsigned int part_size);
 	virtual int RKU_ReadChipInfo(BYTE* lpBuffer);
 	virtual int RKU_ReadFlashID(BYTE* lpBuffer);
 	virtual int RKU_ReadFlashInfo(BYTE* lpBuffer,UINT *puiRead=NULL);
@@ -209,7 +214,7 @@ public:
 	virtual int RKU_TestDeviceReady(DWORD *dwTotal=NULL,DWORD *dwCurrent=NULL,BYTE bySubCode=TU_NONE_SUBCODE);
 	virtual int RKU_WriteLBA(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubCode=RWMETHOD_IMAGE);
 	virtual int RKU_WriteLBALoader(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer,BYTE bySubCode=RWMETHOD_IMAGE);
-        virtual int RKU_WriteSector(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer);
+    virtual int RKU_WriteSector(DWORD dwPos,DWORD dwCount,BYTE* lpBuffer);
 	virtual int RKU_EndWriteSector(BYTE* lpBuffer);
 	virtual int RKU_GetLockFlag(BYTE* lpBuffer);
 	virtual int RKU_GetPublicKey(BYTE* lpBuffer);

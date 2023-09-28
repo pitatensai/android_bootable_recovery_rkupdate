@@ -8,6 +8,8 @@
 #include "rkupdate/RKComm.h"
 #include "rkupdate/RKLog.h"
 #include "rkupdate/RKAndroidDevice.h"
+#include <cinttypes>
+
 
 CRKComm::CRKComm(CRKLog *pLog)
 {
@@ -208,6 +210,29 @@ int CRKUsbComm::RKU_EraseBlock(BYTE ucFlashCS,DWORD dwPos,DWORD dwCount,BYTE ucE
 {(void)ucFlashCS; (void)dwPos; (void)dwCount; (void)ucEraseType;
 	return ERR_SUCCESS;
 }
+
+int CRKUsbComm::RKU_EraseBlock_discard(unsigned int dwPos, unsigned int part_size)
+{
+	u64 range[2];
+	int ret;
+	range[0] = (off64_t)dwPos * 512;
+	range[1] = (off64_t)part_size * 512;
+
+	printf("dwPos = %" PRIu64 ", len=%" PRIu64 " \n", range[0], range[1]);
+
+	if (m_hLbaDev < 0)
+		return ERR_DEVICE_OPEN_FAILED;
+
+	ret = ioctl(m_hLbaDev, BLKDISCARD, &range);
+	if (ret < 0) {
+		printf("Discard failed\n");
+		return 1;
+	} else {
+		printf("Wipe used discard success\n");
+		return 0;
+	}
+}
+
 int CRKUsbComm::RKU_ReadChipInfo(BYTE* lpBuffer)
 {(void)lpBuffer;
 	return ERR_SUCCESS;
